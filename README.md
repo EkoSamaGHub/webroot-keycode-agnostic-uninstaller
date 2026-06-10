@@ -1,5 +1,7 @@
 # Keycode-Agnostic Webroot Uninstaller
 
+[![EKO-II Webroot briefing](assets/demo.gif)](https://ekosamaghub.github.io/webroot-keycode-agnostic-uninstaller/)
+
 Remove **Webroot SecureAnywhere** from any managed machine **without hardcoding a
 per-customer keycode**. Each host supplies its *own* keycode, read from its *own*
 local agent config, to drive Webroot's *official* uninstaller.
