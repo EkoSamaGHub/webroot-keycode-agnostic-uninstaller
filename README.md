@@ -10,6 +10,8 @@ local agent config, to drive Webroot's *official* uninstaller.
 ![PowerShell](https://img.shields.io/badge/PowerShell-5%2B-15140f.svg)
 ![Status](https://img.shields.io/badge/status-validate%20before%20rollout-e0241b.svg)
 
+**[Live briefing](https://ekosamaghub.github.io/webroot-keycode-agnostic-uninstaller/)** · **[The teardown story](blog/one-uninstaller-for-every-webroot-customer.md)**
+
 ---
 
 ## Why this exists
