@@ -134,3 +134,7 @@ fleet deployment. Provided **as is**, without warranty, under the MIT License.
 ## License
 
 [MIT](LICENSE)
+
+---
+
+Built by **[eko.dev](https://eko.dev)** · callsign EKO-II.
