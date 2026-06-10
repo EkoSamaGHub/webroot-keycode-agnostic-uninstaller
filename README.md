@@ -98,6 +98,26 @@ confirmed on a live agent** first, because Webroot has changed them across versi
 
 ---
 
+## Common questions
+
+**Webroot won't uninstall, or it asks for an uninstall password / keycode.**
+Webroot SecureAnywhere protects itself so that malware cannot remove it. The supported way
+to remove it is with the keycode. This script reads that keycode from the machine itself
+and hands it to Webroot's own uninstaller. It does not bypass the self-protection.
+
+**Can I uninstall Webroot silently from the command line?**
+Yes. Run `Remove-Webroot.ps1` elevated. It is non-interactive and returns RMM-friendly
+exit codes, so it drops into NinjaOne, Datto RMM, ConnectWise Automate, Action1, Atera,
+Intune, SCCM, or a GPO startup script.
+
+**I manage many customers and every site has a different keycode.**
+That is exactly what this is for. Nothing is hardcoded. Each machine presents its own
+keycode, so one script covers the whole fleet.
+
+**Does it work without knowing the keycode?**
+If the agent is installed, its keycode is already on the box and the script finds it. If
+it cannot (rare), pass one with `-KeyCode`. It never cracks or patches the binary.
+
 ## Repository layout
 
 ```
@@ -137,4 +157,4 @@ fleet deployment. Provided **as is**, without warranty, under the MIT License.
 
 ---
 
-Built by **[eko.dev](https://eko.dev)** · callsign EKO-II.
+Built by **[sotoprojdev.com](https://sotoprojdev.com)** · callsign EKO-II.
