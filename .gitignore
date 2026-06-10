@@ -1,0 +1,13 @@
+# dependencies
+node_modules/
+
+# Remotion build output (the final mp4 is committed under site/)
+intro/out/
+
+# logs / editor / os cruft
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

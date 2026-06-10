@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EKO-II / Webroot Remover Briefing</title>
+<meta name="description" content="What we found and what we built: two signed Webroot uninstallers, one hidden keycode, and a single remover that works on any machine." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ---------- Swiss International Typographic Style, techy ----------
+     Space Grotesk (display) + IBM Plex Sans (body) + system mono (data)
+     strict 12-col grid · one red accent · sharp corners */
+  :root{
+    --paper:#f4f2ec;
+    --ink:#15140f;
+    --red:#e0241b;
+    --muted:#6c6a61;
+    --rule:#15140f;
+    --panel:#141310;
+    --panel-ink:#efece3;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --display:"Space Grotesk",var(--sans);
+    --mono:ui-monospace,Menlo,Consolas,"Roboto Mono",monospace;
+    --maxw:1280px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);color:var(--ink);font-family:var(--sans);
+    font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+  a{color:inherit}
+
+  /* ---------- top identity bar ---------- */
+  .bar-top{height:4px;background:var(--red)}
+  .nav{position:sticky;top:0;z-index:50;background:rgba(244,242,236,.92);
+    backdrop-filter:saturate(140%) blur(6px);border-bottom:1px solid var(--rule)}
+  .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:var(--mono);
+    font-size:12px;letter-spacing:0.12em;text-transform:uppercase}
+  .brand .dot{width:11px;height:11px;background:var(--red);display:inline-block;
+    animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .nav-idx{display:flex;gap:26px;font-family:var(--mono);font-size:12px;
+    letter-spacing:0.06em;text-transform:uppercase}
+  .nav-idx a{text-decoration:none;color:var(--muted);transition:color .2s}
+  .nav-idx a:hover{color:var(--ink)}
+  .nav-idx b{color:var(--red);font-weight:500;margin-right:6px}
+  @media(max-width:740px){.nav-idx{display:none}}
+
+  /* ---------- masthead ---------- */
+  .masthead{padding:78px 0 56px}
+  .kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:0.18em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:30px}
+  .kicker b{color:var(--red);font-weight:500}
+  .h1{
+    grid-column:1 / span 8;font-family:var(--display);
+    font-weight:700;letter-spacing:-0.02em;line-height:0.96;
+    font-size:clamp(2.7rem,8.2vw,6.4rem);
+  }
+  .h1 .stop{color:var(--red)}
+  .lead{grid-column:1 / span 7;margin-top:30px;max-width:58ch;
+    font-size:clamp(1.08rem,1.7vw,1.32rem);line-height:1.5;color:var(--ink)}
+  .meta{grid-column:9 / span 4;align-self:end}
+  @media(max-width:900px){
+    .h1{grid-column:1 / -1}.lead{grid-column:1 / -1}
+    .meta{grid-column:1 / -1;margin-top:38px}
+  }
+  .meta dl{border-top:2px solid var(--ink)}
+  .meta .row{display:flex;justify-content:space-between;gap:16px;
+    padding:11px 0;border-bottom:1px solid rgba(21,20,15,.18)}
+  .meta dt{font-family:var(--mono);font-size:11.5px;letter-spacing:0.08em;
+    text-transform:uppercase;color:var(--muted)}
+  .meta dd{font-family:var(--mono);font-size:13px;text-align:right;font-weight:500}
+  .meta dd.ok{color:var(--red)}
+
+  /* ---------- briefing video ---------- */
+  .film{border-top:2px solid var(--ink);padding:48px 0}
+  .film-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
+  .film-label{font-family:var(--mono);font-size:12px;letter-spacing:0.18em;
+    text-transform:uppercase;color:var(--red)}
+  .film-meta{font-family:var(--mono);font-size:11.5px;letter-spacing:0.08em;
+    text-transform:uppercase;color:var(--muted)}
+  .film-frame{border:1px solid var(--ink);background:#141310;line-height:0}
+  .film-frame video{display:block;width:100%;height:auto}
+
+  /* ---------- content blocks ---------- */
+  .block{border-top:2px solid var(--ink);padding:64px 0}
+  .block .num{grid-column:1 / span 2;font-family:var(--display);
+    font-weight:700;color:var(--red);
+    font-size:clamp(2rem,4.2vw,3.4rem);letter-spacing:-0.02em;line-height:1}
+  .block .head{grid-column:3 / span 9}
+  .block h2{font-family:var(--display);font-weight:700;letter-spacing:-0.015em;
+    line-height:1.05;font-size:clamp(1.7rem,3.4vw,2.7rem);max-width:20ch;min-height:1.05em}
+  .block .copy{margin-top:22px;max-width:64ch;color:var(--ink);font-size:1.06rem}
+  @media(max-width:740px){
+    .block .num{grid-column:1 / -1;margin-bottom:8px}
+    .block .head{grid-column:1 / -1}
+  }
+
+  /* ---------- big-figure data strip ---------- */
+  .stats{grid-column:3 / span 10;margin-top:42px;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--ink)}
+  .stats.three{grid-template-columns:repeat(3,1fr)}
+  .stat{padding:20px 22px 20px 0;border-right:1px solid rgba(21,20,15,.16)}
+  .stat:last-child{border-right:0}
+  .stat .fig{font-family:var(--display);font-weight:700;letter-spacing:-0.01em;
+    line-height:1;font-size:clamp(1.6rem,3.4vw,2.6rem);font-variant-numeric:tabular-nums}
+  .stat .fig.red{color:var(--red)}
+  .stat .cap{margin-top:10px;font-family:var(--mono);font-size:11px;
+    letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);line-height:1.4}
+  @media(max-width:740px){
+    .stats,.stats.three{grid-column:1 / -1;grid-template-columns:repeat(2,1fr)}
+    .stat{border-bottom:1px solid rgba(21,20,15,.16)}
+  }
+
+  /* ---------- byte-map schematic ---------- */
+  .bytemap{grid-column:3 / span 10;margin-top:44px}
+  .bytemap .label{font-family:var(--mono);font-size:11px;letter-spacing:0.08em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .bar{position:relative;display:flex;height:62px;border:1px solid var(--ink);overflow:hidden}
+  .seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+    font-size:11px;letter-spacing:0.04em;text-transform:uppercase;overflow:hidden;
+    white-space:nowrap;border-right:1px solid var(--ink)}
+  .seg:last-child{border-right:0}
+  .seg.hdr{flex:0 0 4%;background:var(--ink);color:var(--panel-ink)}
+  .seg.payload{flex:1 1 auto;background:repeating-linear-gradient(135deg,
+      rgba(224,36,27,.16),rgba(224,36,27,.16) 9px,
+      rgba(224,36,27,.30) 9px,rgba(224,36,27,.30) 18px);color:var(--ink);font-weight:700}
+  .seg.sig{flex:0 0 16%;background:var(--paper);color:var(--ink)}
+  .scanline{position:absolute;top:0;bottom:0;left:0;width:2px;background:var(--red);
+    opacity:0;box-shadow:0 0 14px 2px rgba(224,36,27,.65);pointer-events:none}
+  .bar.scan .scanline{animation:sweep 1.25s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes sweep{0%{opacity:0;left:0}8%{opacity:1}92%{opacity:1}100%{opacity:0;left:100%}}
+  .bytemap .legend{margin-top:12px;font-family:var(--mono);font-size:11.5px;
+    color:var(--muted);line-height:1.55}
+  @media(max-width:740px){.bytemap{grid-column:1 / -1}.seg{font-size:9px}}
+
+  /* ---------- wrong / right compare ---------- */
+  .compare{grid-column:3 / span 10;margin-top:42px;display:grid;
+    grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--ink)}
+  .compare .col{padding:26px 28px 26px 0}
+  .compare .col + .col{padding-left:32px;border-left:1px solid var(--ink)}
+  .compare .tag{font-family:var(--mono);font-size:11px;letter-spacing:0.12em;
+    text-transform:uppercase;margin-bottom:14px}
+  .compare .no .tag{color:var(--muted)}
+  .compare .yes .tag{color:var(--red)}
+  .compare h3{font-family:var(--display);font-weight:600;font-size:1.22rem;
+    line-height:1.15;margin-bottom:12px;letter-spacing:-0.01em}
+  .compare p{font-size:.99rem;color:var(--ink);max-width:42ch}
+  .compare .verdict{margin-top:16px;font-family:var(--mono);font-size:12px;
+    letter-spacing:0.06em;text-transform:uppercase}
+  .compare .no .verdict{color:var(--muted)}
+  .compare .yes .verdict{color:var(--red);font-weight:600}
+  @media(max-width:740px){.compare{grid-column:1 / -1;grid-template-columns:1fr}
+    .compare .col + .col{padding-left:0;border-left:0;border-top:1px solid var(--ink)}}
+
+  /* ---------- numbered steps ---------- */
+  .steps{grid-column:3 / span 10;margin-top:42px;border-top:1px solid var(--ink)}
+  .step{display:grid;grid-template-columns:64px 1fr;gap:24px;padding:22px 0;
+    border-bottom:1px solid rgba(21,20,15,.18);align-items:baseline}
+  .step .si{font-family:var(--mono);font-size:13px;color:var(--red);font-weight:600;
+    letter-spacing:0.04em}
+  .step .sv{font-family:var(--display);font-weight:600;font-size:1.2rem;letter-spacing:-0.01em}
+  .step .sd{display:block;font-weight:400;font-size:.98rem;color:var(--muted);
+    margin-top:5px;max-width:60ch}
+  @media(max-width:740px){.steps{grid-column:1 / -1}}
+
+  /* ---------- inverse code panel ---------- */
+  .panel{grid-column:3 / span 10;margin-top:44px;background:var(--panel);
+    color:var(--panel-ink);padding:24px 28px;font-family:var(--mono);font-size:13px;
+    line-height:1.7;overflow-x:auto;white-space:pre}
+  .panel .ph{color:#8d8a7e;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;
+    display:block;margin-bottom:14px}
+  .panel .cmt{color:#8d8a7e}
+  .panel .kw{color:var(--red)}
+  .caret{display:inline-block;width:7px;height:.95em;background:var(--red);
+    vertical-align:-1px;margin-left:3px;animation:blink 1.05s step-end infinite}
+  @keyframes blink{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+  @media(max-width:740px){.panel{grid-column:1 / -1}}
+
+  /* ---------- status callout ---------- */
+  .status{grid-column:3 / span 10;margin-top:40px;border-left:4px solid var(--red);
+    padding:18px 0 18px 22px}
+  .status .st{font-family:var(--mono);font-size:11px;letter-spacing:0.12em;
+    text-transform:uppercase;color:var(--red);margin-bottom:10px}
+  .status p{font-size:1.02rem;max-width:60ch}
+  @media(max-width:740px){.status{grid-column:1 / -1}}
+
+  /* ---------- footer (inverse) ---------- */
+  footer{background:var(--panel);color:var(--panel-ink);margin-top:64px;padding:56px 0 48px}
+  footer .grid{align-items:start}
+  footer .fstop{grid-column:1 / span 8;font-family:var(--display);font-weight:700;
+    letter-spacing:-0.015em;line-height:1.1;font-size:clamp(1.4rem,2.6vw,2.1rem)}
+  footer .fstop .red{color:var(--red)}
+  footer .fmeta{grid-column:9 / span 4;font-family:var(--mono);font-size:12px;
+    line-height:1.9;color:#a9a69a}
+  footer .fmeta b{color:var(--panel-ink);font-weight:500}
+  footer .fnote{grid-column:1 / -1;margin-top:40px;padding-top:20px;
+    border-top:1px solid rgba(239,236,227,.18);font-family:var(--mono);font-size:11.5px;
+    letter-spacing:0.04em;color:#8d8a7e;display:flex;justify-content:space-between;
+    flex-wrap:wrap;gap:10px}
+  @media(max-width:740px){footer .fstop,footer .fmeta{grid-column:1 / -1}
+    footer .fmeta{margin-top:24px}}
+
+  /* ---------- scroll reveal + scramble (progressive enhancement) ---------- */
+  .sg{color:var(--red)}
+  body.js-anim .reveal{opacity:0;transform:translateY(18px);
+    transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+  body.js-anim .reveal.in{opacity:1;transform:none}
+  body.js-anim .panel[data-code] .cl{opacity:0}
+  body.js-anim .panel[data-code].run .cl{animation:lineIn .34s ease forwards}
+  .panel[data-code].run .cl:nth-child(2){animation-delay:.04s}
+  .panel[data-code].run .cl:nth-child(3){animation-delay:.10s}
+  .panel[data-code].run .cl:nth-child(4){animation-delay:.16s}
+  .panel[data-code].run .cl:nth-child(5){animation-delay:.22s}
+  .panel[data-code].run .cl:nth-child(6){animation-delay:.28s}
+  .panel[data-code].run .cl:nth-child(7){animation-delay:.34s}
+  .panel[data-code].run .cl:nth-child(8){animation-delay:.40s}
+  .panel[data-code].run .cl:nth-child(9){animation-delay:.46s}
+  @keyframes lineIn{to{opacity:1}}
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .brand .dot,.caret{animation:none}
+  }
+</style>
+</head>
+<body>
+  <div class="bar-top"></div>
+
+  <nav class="nav">
+    <div class="wrap">
+      <div class="brand"><span class="dot"></span> EKO-II / Webroot Briefing</div>
+      <div class="nav-idx">
+        <a href="#found"><b>01</b>Found</a>
+        <a href="#difference"><b>02</b>Difference</a>
+        <a href="#lock"><b>03</b>Lock</a>
+        <a href="#built"><b>04</b>Built</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- MASTHEAD -->
+    <section class="masthead">
+      <div class="wrap">
+        <p class="kicker"><b>Field briefing</b> &nbsp;/&nbsp; Security engineering &nbsp;/&nbsp; 2026.06.10</p>
+        <div class="grid reveal">
+          <h1 class="h1">What we found.<span class="stop">.</span><br>What we built.<span class="stop">.</span></h1>
+          <p class="lead">Two per-customer Webroot uninstallers, one hidden keycode, and one remover that works on any machine without it.</p>
+          <div class="meta">
+            <dl>
+              <div class="row"><dt>Codename</dt><dd>EKO-II</dd></div>
+              <div class="row"><dt>Subject</dt><dd>Webroot SecureAnywhere</dd></div>
+              <div class="row"><dt>Artifacts</dt><dd>2 signed .EXE</dd></div>
+              <div class="row"><dt>Status</dt><dd class="ok">Built / validating</dd></div>
+              <div class="row"><dt>Prepared by</dt><dd>EKO-II</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BRIEFING VIDEO -->
+    <section class="film">
+      <div class="wrap">
+        <div class="film-head">
+          <span class="film-label">Play the briefing</span>
+          <span class="film-meta">18 sec &nbsp;·&nbsp; 1080p</span>
+        </div>
+        <div class="film-frame reveal">
+          <video controls preload="metadata" playsinline poster="poster.jpg">
+            <source src="eko-ii-intro.mp4" type="video/mp4" />
+            <a href="eko-ii-intro.mp4">Download the briefing video.</a>
+          </video>
+        </div>
+      </div>
+    </section>
+
+    <!-- 01 FOUND -->
+    <section class="block" id="found">
+      <div class="wrap"><div class="grid reveal">
+        <div class="num">01</div>
+        <div class="head">
+          <h2 data-scramble>Two files that were almost the same.</h2>
+          <p class="copy">Webroot ships these uninstallers built one per customer site, two different organizations in our case. Both are genuine. Each carries a valid Authenticode signature from Webroot Inc., product UltimateUninstall, version 1.13.0.9. Near-identical in size, yet not the same file.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="fig" data-count="2">2</div><div class="cap">Per-customer<br>builds</div></div>
+          <div class="stat"><div class="fig red" data-count="2592">2,592</div><div class="cap">Bytes of size<br>difference</div></div>
+          <div class="stat"><div class="fig" data-scramble>1.13.0.9</div><div class="cap">Same product<br>version</div></div>
+          <div class="stat"><div class="fig" data-scramble>VALID</div><div class="cap">Webroot Inc.<br>signature</div></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- 02 DIFFERENCE -->
+    <section class="block" id="difference">
+      <div class="wrap"><div class="grid reveal">
+        <div class="num">02</div>
+        <div class="head">
+          <h2 data-scramble>The difference is a key you cannot see.</h2>
+          <p class="copy">Each build holds one customer-specific value: a Webroot keycode. It sits inside a compressed payload, so changing that one value scrambles bytes across the whole file. The customer name appears in zero readable locations. That is why two builds of the same tool look so different.</p>
+        </div>
+
+        <div class="bytemap">
+          <div class="label">Anatomy of one uninstaller (schematic)</div>
+          <div class="bar">
+            <div class="scanline"></div>
+            <div class="seg hdr">PE</div>
+            <div class="seg payload">Compressed payload &nbsp;·&nbsp; entropy 8.00 &nbsp;·&nbsp; keycode sealed inside</div>
+            <div class="seg sig">Signature</div>
+          </div>
+          <div class="legend">The keycode lives in the hatched region. Because it is packed, a one-value change ripples through it. The signature block (about 56 KB) is generated separately, which accounts for most of the byte delta.</div>
+        </div>
+
+        <div class="stats three">
+          <div class="stat"><div class="fig red" data-count="8" data-dec="2">8.00</div><div class="cap">Bits per byte<br>(fully packed)</div></div>
+          <div class="stat"><div class="fig red" data-count="39.1" data-dec="1" data-suffix="%">39.1%</div><div class="cap">Of the body<br>differs</div></div>
+          <div class="stat"><div class="fig" data-scramble>0</div><div class="cap">Plaintext customer<br>strings found</div></div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- 03 LOCK -->
+    <section class="block" id="lock">
+      <div class="wrap"><div class="grid reveal">
+        <div class="num">03</div>
+        <div class="head">
+          <h2 data-scramble>The lock is a feature, not a bug.</h2>
+          <p class="copy">Webroot runs with tamper and self-protection so malware cannot quietly switch off the antivirus. The keycode is the uninstaller's authorization token. So removing Webroot for any customer has a right way and a wrong way, and the difference matters.</p>
+        </div>
+        <div class="compare">
+          <div class="col no">
+            <div class="tag">The wrong way</div>
+            <h3>Crack the signed binary.</h3>
+            <p>Patch the file to skip the keycode and tamper check. That defeats endpoint protection, the exact move attackers use to blind a machine.</p>
+            <div class="verdict">We did not do this.</div>
+          </div>
+          <div class="col yes">
+            <div class="tag">The way we took</div>
+            <h3>Use the machine's own key.</h3>
+            <p>Let each computer present its own keycode to the official uninstaller. Supported, signature-safe, and survives agent updates.</p>
+            <div class="verdict">This is what we built.</div>
+          </div>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- 04 BUILT -->
+    <section class="block" id="built">
+      <div class="wrap"><div class="grid reveal">
+        <div class="num">04</div>
+        <div class="head">
+          <h2 data-scramble>A remover that reads each machine's own key.</h2>
+          <p class="copy">Remove-Webroot.ps1 runs on the target machine, finds the agent, reads that machine's own keycode from its local config, drives Webroot's official uninstall, then sweeps the leftovers. One script, any customer, no hardcoded name, no tamper bypass.</p>
+        </div>
+
+        <div class="steps">
+          <div class="step"><div class="si">01</div><div><span class="sv">Detect</span><span class="sd">Find the agent through registry keys, services, and WRSA.exe.</span></div></div>
+          <div class="step"><div class="si">02</div><div><span class="sv">Discover</span><span class="sd">Read the machine's own keycode by its shape, not a fixed value name, so it survives version drift.</span></div></div>
+          <div class="step"><div class="si">03</div><div><span class="sv">Uninstall</span><span class="sd">Run the official WRSA.exe removal using that keycode.</span></div></div>
+          <div class="step"><div class="si">04</div><div><span class="sv">Sweep</span><span class="sd">Remove residual services, folders, registry keys, and scheduled tasks.</span></div></div>
+        </div>
+
+        <div class="panel" data-code><span class="ph">Discover // simplified</span><span class="cl"><span class="cmt"># scan local config for a value shaped like a keycode</span></span>
+<span class="cl"><span class="kw">foreach</span> ($root <span class="kw">in</span> $WebrootHives) {</span>
+<span class="cl">  <span class="kw">foreach</span> ($value <span class="kw">in</span> (Get-Values $root)) {</span>
+<span class="cl">    <span class="kw">if</span> ($value -match <span class="cmt">'^\w{4}(-\w{4}){4}$'</span>) {</span>
+<span class="cl">      <span class="kw">return</span> $value   <span class="cmt"># this machine's own key</span></span>
+<span class="cl">    }</span>
+<span class="cl">  }</span>
+<span class="cl">}<span class="caret"></span></span></div>
+
+        <div class="status">
+          <div class="st">Status / before fleet rollout</div>
+          <p>Built and syntax-clean. Two things to confirm on a live agent first: the exact registry value that holds the keycode, and the current uninstall switch. A built-in discover-only mode prints both from one test machine.</p>
+        </div>
+      </div></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap"><div class="grid">
+      <div class="fstop">Keycode-agnostic wrapper: <span class="red">yes.</span><br>Crack the signed binary: <span class="red">no.</span></div>
+      <div class="fmeta">
+        <b>EKO-II</b> is our callsign for this analysis work.<br><br>
+        Artifact: Remove-Webroot.ps1<br>
+        Subject: Webroot SecureAnywhere 1.13.0.9<br>
+        Date: 2026.06.10
+      </div>
+      <div class="fnote">
+        <span>Open source, MIT licensed.</span>
+        <span>EKO-II field tools</span>
+      </div>
+    </div></div>
+  </footer>
+
+  <script>
+    (function(){
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var chars = '!<>-_\\/[]{}=+*^?#01ABCDEF';
+
+      function scramble(el){
+        if (el.dataset.done) return; el.dataset.done = '1';
+        var text = el._final != null ? el._final : el.textContent;
+        var ends = [];
+        for (var i=0;i<text.length;i++) ends.push(Math.floor(i*1.3 + 8 + Math.random()*8));
+        var frame = 0;
+        (function tick(){
+          var out='', done=0;
+          for (var i=0;i<text.length;i++){
+            var c = text[i];
+            if (c === ' ') { out += ' '; done++; continue; }
+            if (frame >= ends[i]) { out += c; done++; }
+            else { out += '<span class="sg">' + chars[Math.floor(Math.random()*chars.length)] + '</span>'; }
+          }
+          el.innerHTML = out;
+          if (done === text.length) { el.textContent = text; return; }
+          frame++; requestAnimationFrame(tick);
+        })();
+      }
+
+      function fmt(val, dec){
+        if (dec > 0){
+          var parts = val.toFixed(dec).split('.');
+          parts[0] = parseInt(parts[0],10).toLocaleString('en-US');
+          return parts.join('.');
+        }
+        return Math.round(val).toLocaleString('en-US');
+      }
+      function countUp(el){
+        if (el.dataset.done) return; el.dataset.done = '1';
+        var target = parseFloat(el.getAttribute('data-count'));
+        var dec = parseInt(el.getAttribute('data-dec')||'0',10);
+        var suffix = el.getAttribute('data-suffix')||'';
+        var dur = 1100, start = null;
+        (function step(ts){
+          if (start == null) start = ts;
+          var p = Math.min((ts-start)/dur, 1);
+          var eased = 1 - Math.pow(1-p, 3);
+          el.textContent = fmt(target*eased, dec) + suffix;
+          if (p < 1) requestAnimationFrame(step);
+          else el.textContent = fmt(target, dec) + suffix;
+        })(0);
+      }
+
+      function activate(scope){
+        scope.querySelectorAll('[data-scramble]').forEach(scramble);
+        scope.querySelectorAll('[data-count]').forEach(countUp);
+        var bar = scope.querySelector('.bar'); if (bar) bar.classList.add('scan');
+        var code = scope.querySelector('.panel[data-code]'); if (code) code.classList.add('run');
+      }
+
+      // store final text for scramble targets before anything runs
+      document.querySelectorAll('[data-scramble]').forEach(function(el){ el._final = el.textContent; });
+
+      if (reduce || !('IntersectionObserver' in window)) return; // content already final + visible
+
+      document.body.classList.add('js-anim');
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.isIntersecting){ e.target.classList.add('in'); activate(e.target); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.18 });
+      document.querySelectorAll('.reveal').forEach(function(n){ io.observe(n); });
+    })();
+  </script>
+</body>
+</html>
